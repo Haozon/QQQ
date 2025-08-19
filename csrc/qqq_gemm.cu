@@ -26,6 +26,7 @@
 #include <iostream>
 
 
+// 这是一个向上取整除法函数，等价于 ceil(a/b)。
 constexpr int ceildiv(int a, int b) {
   return (a + b - 1) / b;
 }
@@ -33,6 +34,8 @@ constexpr int ceildiv(int a, int b) {
 // Instances of `Vec` are used to organize groups of >>registers<<, as needed for instance as inputs to tensor core
 // operations. Consequently, all corresponding index accesses must be compile-time constants, which is why we
 // extensively use `#pragma unroll` throughout the kernel code to guarantee this.
+// 向量结构体定义
+// 定义一个向量结构体，用于组织寄存器组。__device__表示这个函数在GPU上执行。
 template <typename T, int n>
 struct Vec {
   T elems[n];
@@ -45,6 +48,13 @@ using I4 = Vec<int, 4>;
 
 // Matrix fragments for tensor core instructions; their precise layout is documented here: 
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#matrix-fragments-for-mma-m16n8k16-with-integer-type
+
+/*
+定义不同类型的矩阵片段：
+I4: 4个整数的向量
+FragA/B/C: 用于张量核心操作的矩阵片段
+FragS: 量化缩放因子
+*/
 using FragA = Vec<uint32_t, 2>;
 using FragB = Vec<uint32_t, 1>;
 using FragC = Vec<int, 4>;
@@ -64,7 +74,8 @@ __device__ inline void cp_async4_pred(void* smem_ptr, const void* glob_ptr, bool
     "}\n" :: "r"((int) pred), "r"(smem), "l"(glob_ptr), "n"(BYTES)
   );
 }
-
+// 1. 基础工具函数
+// 异步内存拷贝函数
 // Asynchronous global->shared copy
 __device__ inline void cp_async4(void* smem_ptr, const void* glob_ptr) {
   const int BYTES = 16;
